@@ -1,43 +1,50 @@
 #include <SPI.h>
 #include <LoRa.h>
 
-#define SCK     5    // GPIO5  -- SX1278's SCK
-#define MISO    19   // GPIO19 -- SX1278's MISO
-#define MOSI    27   // GPIO27 -- SX1278's MOSI
-#define SS      18   // GPIO18 -- SX1278's CS
-#define RST     14   // GPIO14 -- SX1278's RESET
-#define DI0     26   // GPIO26 -- SX1278's IRQ(Interrupt Request)
-#define BAND    915E6
+// Konfigurasi pin untuk LilyGO T-Beam
+#define SCK 5
+#define MISO 19
+#define MOSI 27
+#define SS 18
+#define RST 23
+#define DIO0 26
 
-unsigned int counter = 0;
+// Frekuensi LoRa: sesuaikan dengan wilayah geografis Anda
+#define BAND 915E6 // 433E6 untuk Asia, 866E6 untuk Eropa, 915E6 untuk Amerika Utara
+
+int counter = 0;
 
 void setup() {
-  Serial.begin(9600);
-  while (!Serial);
-  Serial.println();
-  Serial.println("LoRa Sender Test");
+  // Inisialisasi Serial Monitor
+  Serial.begin(115200);
+  delay(1000);
+  Serial.println("Initializing T-Beam Meshtastic...");
 
+  // Inisialisasi SPI LoRa
   SPI.begin(SCK, MISO, MOSI, SS);
-  LoRa.setPins(SS, RST, DI0);
-  if (!LoRa.begin(BAND)) {
-    Serial.println("Starting LoRa failed!");
-    while (1);
-  }
-   LoRa.setSyncWord(0xF1);
-  Serial.println("init ok");
+  LoRa.setPins(SS, RST, DIO0);
 
-  delay(1500);
+  if (!LoRa.begin(BAND)) {
+    Serial.println("LoRa initialization failed!");
+    while (true); // Berhenti jika LoRa gagal diinisialisasi
+  }
+  
+  Serial.println("LoRa initialization succeeded!");
+  LoRa.setSyncWord(0xF1); // Opsional: Set Sync Word untuk jaringan tertentu
 }
 
 void loop() {
-  Serial.println("Sending packet: " + String(counter));
+  // Kirim pesan melalui LoRa
+  Serial.print("Sending packet: ");
+  Serial.println(counter);
 
-  // send packet
   LoRa.beginPacket();
-  LoRa.write(counter);
+  LoRa.print("Hello :) #");
+  LoRa.print(counter);
   LoRa.endPacket();
-  Serial.println("sended");
+
+  Serial.println("Packet sent!");
 
   counter++;
-  delay(500); // delay for 1 second before sending the next packet
+  delay(5000); // Tunggu 5 detik sebelum mengirimkan paket berikutnya
 }
